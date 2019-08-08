@@ -1,0 +1,215 @@
+import { SelfIntroduce } from '../components/SelfIntroduce'
+
+# 自己紹介
+
+<SelfIntroduce />
+
+人生初LT、お手柔らかに:pray:
+
+--- 
+
+# テスト、書いてますか？
+
+---
+
+# React Hooksのテスト、書いてますか？
+
+---
+
+# React Hooks誕生後の世界
+
+<ul class="flexblock activity">
+  <li>UIコンポーネント→Function Component</li>
+  <li>ビジネスロジック→Custom Hook</li>
+</ul>
+
+___
+
+# こんないいことが
+
+<br />
+
+- UIとロジックが分離され、テスタブルなコードに
+- ビジネスロジックをCustom Hookに集約する(APIからのデータ取得・加工、状態、ハンドラー)
+- UIコンポーネントの開発は受け取るPropsの定義と、それらを元にした表示のみ
+- UIコンポーネント開発者はロジック部分やAPIの仕様などを一切知る必要がない
+- 複数の開発者が同一ページのUIとロジックを並行開発することが可能
+
+---
+
+# 今こそ、テストをやるチャンス:tada:
+
+---
+
+# それぞれのテスト
+
+<ul class="flexblock activity">
+  <li>UIコンポーネント→Storybook + reg-suit</li>
+  <li>ビジネスロジック→@testing-library/react-hooks</li>
+</ul>
+
+---
+
+# 今日話すのはここ
+
+<ul class="flexblock activity">
+  <li>UIコンポーネント→Storybook + reg-suit</li>
+  <li class="bg-primary">ビジネスロジック→@testing-library/react-hooks</li>
+</ul>
+
+---
+
+# @testing-library/react-hooks
+
+<br />
+
+- [公式ドキュメント](https://react-hooks-testing-library.com/)
+- React Hooksのテストユーティリティライブラリ
+- hookをシンプルな関数のように実行でき(ラッパーコンポーネントは不要)、<br />hookの更新も容易
+- [メインのファイル](https://github.com/testing-library/react-hooks-testing-library/blob/master/src/index.js)はわずか93行
+
+---
+
+# パッケージの追加 
+
+<br />
+
+```shell
+yarn add --dev @testing-library/react-hooks
+
+# もしくは
+npm install --save-dev @testing-library/react-hooks
+```
+
+---
+
+@testing-library/react-hooksを使ったシンプルなテスト
+
+<br />
+
+```javascript
+import { useState, useCallback } from 'React'
+
+export default function useCounter() {
+  const [count, setCount] = useState(0)
+  const increment = useCallback(() => setCount((x) => x + 1), [])
+  return { count, increment }
+}
+```
+
+```javascript
+import { renderHook } from '@testing-library/react-hooks'
+import useCounter from '.'
+
+test('should use counter', () => {
+  // hookを実行
+  const { result } = renderHook(() => useCounter())
+
+  // resut.currentからhookの返り値を取得
+  expect(result.current.count).toBe(0)
+  expect(typeof result.current.increment).toBe('function')
+})
+```
+
+---
+
+ブラウザ上でのhookの動作をシミュレートして、<br />値を更新するには？:thinking_face:
+
+<br />
+
+```javascript
+test('should increment counter', () => {
+  const { result } = renderHook(() => useCounter())
+
+  expect(result.current.count).toBe(0)
+
+  // actでラップする
+  act(() => {
+    result.current.increment()
+  })
+
+  expect(result.current.count).toBe(1)
+})
+```
+
+---
+
+Contextから値を取得するときはどうする？:thinking_face:<br />(Redux, Apollo Client, ...)
+
+<br />
+
+```javascript
+const CounterStepContext = React.createContext(1)
+
+export const CounterStepProvider = ({ step, children }) => (
+  <CounterStepContext.Provider value={step}>{children}</CounterStepContext.Provider>
+)
+
+export function useCounter() {
+  const [count, setCount] = useState(0)
+  // incrementする値はContextから取得
+  const step = useContext(CounterStepContext)
+  const increment = useCallback(() => setCount((x) => x + step), [step])
+  return { count, increment }
+}
+```
+
+---
+
+```javascript
+import { useCounter, CounterStepProvider } from '.'
+
+test('should use custom step when incrementing', () => {
+  const wrapper = ({ children }) => (
+    <CounterStepProvider step={2}>{children}</CounterStepProvider>
+  )
+  // renderHookの第2引数にwrapperオプションを指定
+  const { result } = renderHook(() => useCounter(), { wrapper })
+
+  expect(result.current.count).toBe(0)
+
+  act(() => {
+    result.current.increment()
+  })
+
+  expect(result.current.count).toBe(2)
+})
+```
+
+---
+
+非同期な関数の実行はどうする？:thinking_face:
+
+<br />
+
+```javascript
+export default function useCounter() {
+  const [count, setCount] = useState(0)
+  const increment = useCallback(() => setCount((x) => x + 1), [])
+  // 0.1秒後に非同期にincrementする
+  const incrementAsync = useCallback(() => setTimeout(increment, 100), [increment])
+  return { count, increment, incrementAsync }
+}
+```
+
+---
+
+```javascript
+test('should increment counter after delay', async () => {
+  const { result, waitForNextUpdate } = renderHook(() => useCounter())
+
+  result.current.incrementAsync()
+
+  // 実行直後はまだincrementされていない
+  expect(result.current.count).toBe(0)
+
+  // Promiseがresolveされるまで待つ
+  await waitForNextUpdate()
+
+  expect(result.current.count).toBe(1)
+})
+```
+
+---
+
+# @testing-library/react-hooksで<br />快適なテストライフを:thumbsup:

@@ -1,0 +1,15 @@
+{
+  "name": "introducing-react-hooks-test",
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "fusuma": "^1.14.1"
+  },
+  "scripts": {
+    "init": "fusuma init",
+    "start": "fusuma start",
+    "live": "fusuma live -w '@nodejs'",
+    "deploy": "yarn build && fusuma deploy",
+    "pdf": "fusuma pdf"
+  }
+}
