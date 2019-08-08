@@ -8,6 +8,7 @@
   "scripts": {
     "init": "fusuma init",
     "start": "fusuma start",
+    "build": "fusuma build",
     "live": "fusuma live -w '@nodejs'",
     "deploy": "yarn build && fusuma deploy",
     "pdf": "fusuma pdf"
